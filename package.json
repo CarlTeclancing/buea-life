@@ -1,0 +1,1 @@
+{"name":"buea-life","private":true,"version":"0.1.0","scripts":{"start":"node scripts/start.js","test":"node --test backend/src/server.test.js"}}
