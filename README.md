@@ -34,7 +34,7 @@ Import this repository as one Vercel project with the repository root as its Roo
 
 Both browser clients call same-origin `/api/*` in this deployment. Only standalone local clients on localhost ports 5173/5174 use the API on port 4100. The old `buea-api` localStorage override is no longer used.
 
-The client services explicitly bundle `index.html` and `src/**` using their service-scoped `functions.server.js.includeFiles` settings; mobile also bundles its manifest. Keep these settings: the static servers resolve filenames from request paths, so automatic function tracing can omit client assets even when `vercel dev` serves them successfully from disk. After changing this configuration, create a new deployment to rebuild the function bundles.
+Each client server reads an explicit list of assets using literal file paths, so Vercel can trace and bundle them without relying on service-scoped `includeFiles`. When adding a client asset, add it to the server's `assets` Map. The `src/package.json` files mark browser JavaScript as ES modules so the Node builder preserves its format. The service-scoped `includeFiles` settings remain as additional explicit inclusion. After changing server code or configuration, create a new deployment to rebuild the function bundles; `vercel dev` alone does not verify production packaging.
 
 There are no server-to-server calls, so no service bindings or bound environment variables are needed. Browser JavaScript cannot consume runtime service bindings. If the backend should become internal, add a server-side API proxy and declare the backend binding on its calling service before removing the public API rewrite.
 
