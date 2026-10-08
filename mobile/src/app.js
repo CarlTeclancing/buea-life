@@ -1,7 +1,9 @@
-﻿const API = localStorage.getItem('buea-api') || 'http://localhost:4100';
+// Standalone npm start uses separate ports; Vercel uses same-origin /api.
+const API = ['localhost', '127.0.0.1'].includes(location.hostname) && location.port === '5174' ? 'http://localhost:4100' : '';
 const app = document.querySelector('#app');
 import { isGameAudioMuted, playGameSound, setStoryTheme, toggleGameAudio } from './game-audio.js';
 let worldScene = null;
+let recoveryTimer = null;
 
 async function mountWorldScene() {
   const container = document.querySelector('.district-map');
@@ -34,7 +36,7 @@ const state = {
   story: null,
   difficulty: 'standard',
   activeLocationId: null,
-  milestone: null,
+    app.innerHTML = `
   leaderboard: null,
   activeStoryIndex: 0
 };
@@ -116,6 +118,55 @@ async function performStoryActivity(activityId) {
   }
 }
 
+function recoveryWaitText(seconds) {
+  return `00:${String(Math.max(0, seconds)).padStart(2, '0')}`;
+}
+
+function recoveryMarkup(player) {
+  if (player.balance > 0) return '';
+  const started = Boolean(player.recoveryStartedAt);
+  const readyAt = started ? player.recoveryStartedAt + 20000 : player.recoveryAvailableAt || 0;
+  const remaining = Math.max(0, Math.ceil((readyAt - Date.now()) / 1000));
+  const coolingDown = !started && remaining > 0;
+  return `<div class="recovery-overlay"><section class="recovery-card"><div class="recovery-symbol">${icon('wallet')}</div><span class="milestone-eyebrow">PAUSE AND RESET</span><h2>Out of FCFA</h2><p>${started ? 'Stay here while your 20-second sponsored break plays. Then collect a small restart grant.' : coolingDown ? 'Your next recovery break will be ready soon.' : 'Take a 20-second sponsored break to get a little cash and energy to continue.'}</p><div class="recovery-reward"><span>+2,500 FCFA</span><span>+30 energy</span></div><button class="primary-button recovery-action" id="recovery-action" ${remaining > 0 ? 'disabled' : ''}>${started ? remaining ? `Break in ${recoveryWaitText(remaining)}` : 'Collect restart grant' : coolingDown ? `Ready in ${recoveryWaitText(remaining)}` : 'Start 20-second break'}</button><small>Simulated rewarded break. No ad provider is connected.</small></section></div>`;
+}
+
+async function handleRecoveryAction() {
+  try {
+    if (state.player.recoveryStartedAt && Date.now() >= state.player.recoveryStartedAt + 20000) {
+      const response = await api('/api/player/recovery/claim', { method: 'POST', body: '{}' });
+      state.player = response.player;
+      renderGame();
+      playGameSound('complete');
+      showToast(`Restart grant: +${response.reward.cash.toLocaleString('en-US')} FCFA and +${response.reward.energy} energy.`);
+      return;
+    }
+    const response = await api('/api/player/recovery/start', { method: 'POST', body: '{}' });
+    state.player.recoveryStartedAt = response.readyAt - response.waitMs;
+    renderGame();
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+async function handleRecoveryAction() {
+  try {
+    if (state.player.recoveryStartedAt && Date.now() >= state.player.recoveryStartedAt + 20000) {
+      const response = await api('/api/player/recovery/claim', { method: 'POST', body: '{}' });
+      state.player = response.player;
+      renderGame();
+      playGameSound('complete');
+      showToast(`Restart grant: +${response.reward.cash.toLocaleString('en-US')} FCFA and +${response.reward.energy} energy.`);
+      return;
+    }
+    const response = await api('/api/player/recovery/start', { method: 'POST', body: '{}' });
+    state.player.recoveryStartedAt = response.readyAt - response.waitMs;
+    renderGame();
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
 function renderStorySelect() {
   setStoryTheme(null);
   app.innerHTML = `
@@ -176,6 +227,7 @@ function icon(name) {
     sound: '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/>',
     mute: '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m17 9 5 6m0-6-5 6"/>',
     target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v2m10 8h-2"/>',
+    wallet: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18m-5 4h2"/>',
     save: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
     exit: '<path d="M10 17l5-5-5-5m5 5H3"/><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"/>',
     rank: '<path d="M8 21h8m-4-4v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 7H4v2a4 4 0 0 0 4 4m9-6h3v2a4 4 0 0 1-4 4"/>',
@@ -453,6 +505,8 @@ function renderGame() {
 
         ${milestone ? `<div class="milestone-overlay"><div class="milestone-card"><div class="wax-seal"><span>✦</span></div><span class="milestone-eyebrow">${milestone.storyCompleted ? 'THE STORY IS YOURS' : milestone.chapterCompleted ? 'CHAPTER COMPLETE' : 'LEVEL COMPLETE'}</span><h2>${milestone.storyCompleted ? 'Buea remembers.' : currentMission?.title || 'A new chapter opens.'}</h2><p>${milestone.storyCompleted ? 'You made this place your own. Your next story is waiting.' : `You earned ${milestone.reward?.points || currentMission?.rewards.points || 0} points and ${milestone.reward?.xp || currentMission?.rewards.xp || 0} XP.`}</p><div class="milestone-reward">${icon('rank')} <span>${state.player.title || 'New Arrival'} · ${state.player.streak || 0} day streak</span></div><button class="primary-button milestone-continue" id="milestone-continue">${milestone.storyCompleted ? 'Choose another story' : 'Continue to next level'} ${icon('next')}</button></div></div>` : ''}
 
+        ${recoveryMarkup(state.player)}
+
         <div class="interaction-bar">
           <button class="dock-action task-jump" id="task-jump" aria-label="${currentTask ? `Go to ${currentTask.title}` : 'No next task'}" title="${currentTask ? `${currentTask.title} at ${state.world.locations.find((location) => location.id === currentTask.locationId)?.name}` : 'No next task'}" ${!currentTask ? 'disabled' : ''}>${icon('target')}<span>Task</span></button>
           <button class="dock-action" id="leaderboard-btn" aria-label="Leaderboard" title="Leaderboard">${icon('rank')}<span>Rank</span></button>
@@ -465,6 +519,22 @@ function renderGame() {
   `;
 
   mountWorldScene();
+  if (recoveryTimer) clearInterval(recoveryTimer);
+  if (state.player.balance <= 0) {
+    document.querySelector('#recovery-action')?.addEventListener('click', handleRecoveryAction);
+    recoveryTimer = setInterval(() => {
+      const button = document.querySelector('#recovery-action');
+      if (!button) { clearInterval(recoveryTimer); return; }
+      const startedAt = state.player.recoveryStartedAt;
+      const nextAt = startedAt ? startedAt + 20000 : state.player.recoveryAvailableAt || 0;
+      const remaining = Math.max(0, Math.ceil((nextAt - Date.now()) / 1000));
+      button.disabled = Boolean(startedAt && remaining > 0) || Boolean(!startedAt && remaining > 0);
+      button.textContent = startedAt ? remaining ? `Break in ${recoveryWaitText(remaining)}` : 'Collect restart grant' : remaining ? `Ready in ${recoveryWaitText(remaining)}` : 'Start 20-second break';
+    }, 250);
+  } else if (recoveryTimer) {
+    clearInterval(recoveryTimer);
+    recoveryTimer = null;
+  }
   document.querySelector('.level-step.current')?.scrollIntoView({ block: 'nearest', inline: 'center' });
 
   document.querySelectorAll('.location-marker').forEach((button) => {

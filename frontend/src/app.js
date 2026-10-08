@@ -1,4 +1,5 @@
-﻿const API = localStorage.getItem('buea-api') || 'http://localhost:4100';
+// Standalone npm start uses separate ports; Vercel uses same-origin /api.
+const API = ['localhost', '127.0.0.1'].includes(location.hostname) && location.port === '5173' ? 'http://localhost:4100' : '';
 const app = document.querySelector('#app');
 import { isGameAudioMuted, playGameSound, setStoryTheme, toggleGameAudio } from './game-audio.js';
 let worldScene = null;

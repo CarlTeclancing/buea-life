@@ -43,6 +43,70 @@ function tree(scene, x, z, scale) {
   scene.add(crown);
 }
 
+function streetLamp(scene, x, z) {
+  const metal = new THREE.MeshStandardMaterial({ color: 0x3b4c43, roughness: 0.75, metalness: 0.2 });
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.09, 3.7, 6), metal);
+  pole.position.set(x, 1.85, z);
+  scene.add(pole);
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.08, 0.08), metal);
+  arm.position.set(x + 0.34, 3.56, z);
+  scene.add(arm);
+  const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.16, 0.28), new THREE.MeshStandardMaterial({ color: 0xf5d68c, emissive: 0x9c7434, emissiveIntensity: 0.3 }));
+  lamp.position.set(x + 0.68, 3.48, z);
+  scene.add(lamp);
+}
+
+function kiosk(scene, x, z, color) {
+  const stall = new THREE.Group();
+  box(stall, [1.8, 1.25, 1.25], [0, 0.72, 0], color);
+  box(stall, [2.1, 0.12, 1.5], [0, 1.43, 0], 0x794b38);
+  box(stall, [1.9, 0.55, 0.08], [0, 0.95, 0.67], 0xe6d19f);
+  stall.position.set(x, 0, z);
+  scene.add(stall);
+}
+
+function townEdge(scene, dimensions) {
+  const voidFloor = new THREE.Mesh(new THREE.PlaneGeometry(420, 420), new THREE.MeshBasicMaterial({ color: 0x172321 }));
+  voidFloor.rotation.x = -Math.PI / 2;
+  voidFloor.position.y = -2.2;
+  scene.add(voidFloor);
+  const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0x596e56, roughness: 1, flatShading: true });
+  for (const side of [-1, 1]) {
+    const verge = new THREE.Mesh(new THREE.BoxGeometry(dimensions.width + 1.2, 0.48, 0.55), edgeMaterial);
+    verge.position.set(0, -0.24, side * (dimensions.depth / 2 - 0.1));
+    scene.add(verge);
+  }
+}
+
+function streetDetails(scene, dimensions) {
+  const roadPaint = new THREE.MeshStandardMaterial({ color: 0xe4d8b7, roughness: 1 });
+  const sidewalk = new THREE.MeshStandardMaterial({ color: 0xb8ae91, roughness: 1 });
+  for (const z of [-dimensions.depth * 0.28, 1.8, dimensions.depth * 0.28]) {
+    const road = new THREE.Mesh(new THREE.PlaneGeometry(dimensions.width * 0.86, z === 1.8 ? 3.4 : 2.5), new THREE.MeshStandardMaterial({ color: z === 1.8 ? 0xc9bea4 : 0xbeb394, roughness: 1 }));
+    road.rotation.x = -Math.PI / 2;
+    road.position.set(0, 0.015, z);
+    scene.add(road);
+    for (let x = -dimensions.width * 0.42; x < dimensions.width * 0.42; x += 3.7) {
+      const dash = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.025, 0.09), roadPaint);
+      dash.position.set(x, 0.04, z);
+      scene.add(dash);
+    }
+    for (const edge of [-1, 1]) {
+      const walk = new THREE.Mesh(new THREE.PlaneGeometry(dimensions.width * 0.86, 0.62), sidewalk);
+      walk.rotation.x = -Math.PI / 2;
+      walk.position.set(0, 0.025, z + edge * 2.05);
+      scene.add(walk);
+    }
+  }
+  for (let index = 0; index < 7; index += 1) {
+    const x = -dimensions.width * 0.4 + index * dimensions.width * 0.13;
+    streetLamp(scene, x, -dimensions.depth * 0.28 - 2.1);
+    if (index % 2 === 0) streetLamp(scene, x, dimensions.depth * 0.28 + 2.1);
+  }
+  kiosk(scene, -dimensions.width * 0.22, -dimensions.depth * 0.28 - 3.2, 0xc7834d);
+  kiosk(scene, dimensions.width * 0.25, dimensions.depth * 0.28 + 3.1, 0x719284);
+}
+
 function createPerson(shirtColor) {
   const person = new THREE.Group();
   const shirt = new THREE.MeshStandardMaterial({ color: shirtColor, roughness: 0.9, flatShading: true });
@@ -197,6 +261,8 @@ export function mountWorldScene(container, locations, position, sceneOptions = {
   crossRoad.rotation.x = -Math.PI / 2;
   crossRoad.position.set(-4, 0.01, 0);
   scene.add(crossRoad);
+  townEdge(scene, dimensions);
+  streetDetails(scene, dimensions);
   for (let i = 0; i < 5; i += 1) {
     const mountain = new THREE.Mesh(new THREE.ConeGeometry(7 + i * 0.7, 8 + (i % 2) * 2, 5), new THREE.MeshStandardMaterial({ color: 0x668b79, flatShading: true }));
     mountain.position.set(-dimensions.width * 0.55 + i * dimensions.width * 0.275, 2.3, -dimensions.depth * 0.82 - (i % 2) * 2);

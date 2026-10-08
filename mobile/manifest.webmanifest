@@ -1,1 +1,1 @@
-{"name":"Buea Life","short_name":"BueaLife","start_url":"/","display":"standalone","background_color":"#e8f2ec","theme_color":"#174f39","icons":[]}
+{"name":"Buea Life","short_name":"BueaLife","start_url":"./","scope":"./","display":"standalone","background_color":"#e8f2ec","theme_color":"#174f39","icons":[]}

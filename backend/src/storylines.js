@@ -2,47 +2,65 @@ const locations = {
   mile17: [
     { id: 'ask-route', title: 'Ask for directions', detail: 'Check which shared taxi reaches Molyko safely.', kind: 'social' },
     { id: 'check-arrival', title: 'Check in with home', detail: 'Find a quiet moment to tell your people you arrived.', kind: 'social' },
-    { id: 'plan-fare', title: 'Plan your fare', detail: 'Count your notes and agree a fair first fare.', kind: 'commerce' }
+    { id: 'plan-fare', title: 'Plan your fare', detail: 'Count your notes and agree a fair first fare.', kind: 'commerce' },
+    { id: 'tag-your-bag', title: 'Tag your bag', detail: 'Mark your luggage and keep the documents you need close.', kind: 'learn' },
+    { id: 'find-water', title: 'Find drinking water', detail: 'Ask where to refill a bottle before the ride into town.', kind: 'commerce' }
   ],
   taxi: [
     { id: 'share-ride', title: 'Join a shared taxi', detail: 'Agree the fare and share the ride into town.', kind: 'social' },
     { id: 'learn-routes', title: 'Learn the routes', detail: 'Ask a driver how people move between Molyko and campus.', kind: 'learn' },
-    { id: 'help-luggage', title: 'Help with luggage', detail: 'Make room for a neighbour heading into town.', kind: 'community' }
+    { id: 'help-luggage', title: 'Help with luggage', detail: 'Make room for a neighbour heading into town.', kind: 'community' },
+    { id: 'confirm-fare', title: 'Confirm the shared fare', detail: 'Check the fare before boarding and keep enough for the return.', kind: 'commerce' },
+    { id: 'check-seat', title: 'Find a safe seat', detail: 'Make space, buckle in and check your stop with the driver.', kind: 'social' }
   ],
   molyko: [
     { id: 'ask-shopkeeper', title: 'Ask a shopkeeper', detail: 'Get a local tip on food, rooms, and the price of things.', kind: 'social' },
     { id: 'find-landmark', title: 'Find a landmark', detail: 'Learn a familiar meeting point in the busy district.', kind: 'learn' },
-    { id: 'help-neighbour', title: 'Help a neighbour', detail: 'Carry a parcel and make your first local connection.', kind: 'community' }
+    { id: 'help-neighbour', title: 'Help a neighbour', detail: 'Carry a parcel and make your first local connection.', kind: 'community' },
+    { id: 'buy-airtime', title: 'Buy a little airtime', detail: 'Top up your phone so your contacts can reach you.', kind: 'commerce' },
+    { id: 'collect-parcel', title: 'Collect a parcel', detail: 'Find the right shop and check the package before leaving.', kind: 'commerce' }
   ],
   university: [
     { id: 'check-noticeboard', title: 'Read the noticeboard', detail: 'Find the office hours, registration steps, or study group.', kind: 'learn' },
     { id: 'join-study', title: 'Join a study circle', detail: 'Trade notes and make a realistic plan for the week.', kind: 'learn' },
-    { id: 'ask-admissions', title: 'Ask admissions', detail: 'Speak to the desk about forms, fees, and deadlines.', kind: 'social' }
+    { id: 'ask-admissions', title: 'Ask admissions', detail: 'Speak to the desk about forms, fees, and deadlines.', kind: 'social' },
+    { id: 'photocopy-notes', title: 'Photocopy your notes', detail: 'Print only the pages you need and save the rest of your cash.', kind: 'commerce' },
+    { id: 'find-quiet-seat', title: 'Find a quiet study seat', detail: 'Choose a spot where you can focus before the next class.', kind: 'learn' }
   ],
   restaurant: [
     { id: 'choose-lunch', title: 'Choose a local lunch', detail: 'Pick a filling meal and keep an eye on your budget.', kind: 'meal' },
     { id: 'ask-menu', title: 'Ask about the menu', detail: 'Find out what is fresh before spending your cash.', kind: 'social' },
-    { id: 'help-clear', title: 'Help clear the table', detail: 'Give the team a hand during the lunch rush.', kind: 'community' }
+    { id: 'help-clear', title: 'Help clear the table', detail: 'Give the team a hand during the lunch rush.', kind: 'community' },
+    { id: 'pack-takeaway', title: 'Pack a takeaway', detail: 'Ask for a sensible portion you can afford to carry home.', kind: 'meal' },
+    { id: 'wash-hands', title: 'Find a wash station', detail: 'Freshen up before eating and heading back into town.', kind: 'social' }
   ],
   home: [
     { id: 'inspect-room', title: 'Inspect a room', detail: 'Check the water, power, locks, and what the rent includes.', kind: 'learn' },
     { id: 'settle-in', title: 'Settle in', detail: 'Unpack, rest, and make a simple plan for tomorrow.', kind: 'rest' },
-    { id: 'meet-neighbour', title: 'Meet a neighbour', detail: 'Introduce yourself and learn the house routine.', kind: 'social' }
+    { id: 'meet-neighbour', title: 'Meet a neighbour', detail: 'Introduce yourself and learn the house routine.', kind: 'social' },
+    { id: 'pay-power-share', title: 'Contribute to power', detail: 'Agree a fair share for the house electricity top-up.', kind: 'commerce' },
+    { id: 'fill-water-bucket', title: 'Fill the water bucket', detail: 'Carry enough water for cooking and washing before evening.', kind: 'community' }
   ],
   market: [
     { id: 'compare-prices', title: 'Compare prices', detail: 'Check two stalls before deciding what your money can buy.', kind: 'commerce' },
     { id: 'buy-produce', title: 'Pick fresh produce', detail: 'Choose seasonal ingredients for a meal or small resale.', kind: 'meal' },
-    { id: 'negotiate-stock', title: 'Negotiate stock', detail: 'Ask a trader about a fair small-batch price.', kind: 'commerce' }
+    { id: 'negotiate-stock', title: 'Negotiate stock', detail: 'Ask a trader about a fair small-batch price.', kind: 'commerce' },
+    { id: 'weigh-produce', title: 'Check the produce weight', detail: 'Make sure the scale and price agree before you buy.', kind: 'commerce' },
+    { id: 'return-crate', title: 'Return the empty crate', detail: 'Bring the crate back and keep the deposit in your pocket.', kind: 'community' }
   ],
   tech: [
     { id: 'finish-design', title: 'Finish a design brief', detail: 'Deliver a tidy poster or social graphic before the deadline.', kind: 'work' },
     { id: 'print-cv', title: 'Print a CV', detail: 'Prepare a one-page CV and ask for a quick review.', kind: 'work' },
-    { id: 'learn-a-skill', title: 'Practise a digital skill', detail: 'Spend a focused session improving one useful skill.', kind: 'learn' }
+    { id: 'learn-a-skill', title: 'Practise a digital skill', detail: 'Spend a focused session improving one useful skill.', kind: 'learn' },
+    { id: 'send-client-proof', title: 'Send the client a proof', detail: 'Check spelling and send a low-data preview for approval.', kind: 'work' },
+    { id: 'back-up-files', title: 'Back up your files', detail: 'Keep a copy safe before the next power cut.', kind: 'learn' }
   ],
   mount: [
     { id: 'meet-guide', title: 'Meet a local guide', detail: 'Ask about the trail, the weather, and the mountain’s stories.', kind: 'social' },
     { id: 'walk-viewpoint', title: 'Walk to a viewpoint', detail: 'Take a steady walk and make time to appreciate the view.', kind: 'fitness' },
-    { id: 'care-for-trail', title: 'Care for the trail', detail: 'Leave the path better than you found it.', kind: 'community' }
+    { id: 'care-for-trail', title: 'Care for the trail', detail: 'Leave the path better than you found it.', kind: 'community' },
+    { id: 'check-weather', title: 'Check the weather', detail: 'Read the clouds and decide whether the walk can continue.', kind: 'learn' },
+    { id: 'share-water', title: 'Share drinking water', detail: 'Offer a refill to somebody who has run short on the trail.', kind: 'community' }
   ]
 };
 
@@ -116,10 +134,14 @@ function getMission(storyId, level, chosenDifficulty = 'standard') {
   const chapterIndex = Math.floor((level - 1) / 5);
   const chapter = story.chapters[chapterIndex];
   const difficulty = level <= 10 ? 'Easy' : level <= 20 ? 'Steady' : level <= 30 ? 'Hard' : 'Expert';
-  const standardTaskCount = level <= 10 ? 1 : level <= 20 ? 2 : level <= 30 ? 2 : 3;
-  const taskCount = chosenDifficulty === 'easy' ? 1 : chosenDifficulty === 'hard' ? Math.min(3, standardTaskCount + 1) : standardTaskCount;
+  const standardTaskCount = level <= 10 ? 2 : level <= 20 ? 3 : level <= 30 ? 4 : 5;
+  const taskCount = chosenDifficulty === 'easy'
+    ? Math.max(1, standardTaskCount - 1)
+    : chosenDifficulty === 'hard'
+      ? Math.min(story.route.length, standardTaskCount + 2)
+      : standardTaskCount;
   const tasks = Array.from({ length: taskCount }, (_, step) => {
-    const routeIndex = (level - 1 + step * (level > 20 ? 3 : 2)) % story.route.length;
+    const routeIndex = (level - 1 + step * 2 + Math.floor((level - 1) / 7)) % story.route.length;
     const locationId = story.route[routeIndex];
     const activities = locations[locationId];
     const activity = activities[(level + step + chapterIndex) % activities.length];

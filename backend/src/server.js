@@ -26,10 +26,10 @@ const locations = [
 ];
 
 const jobs = [
-  { id: 'print', title: 'Print Shop Assistant', pay: 3500, energyCost: 12 },
-  { id: 'design', title: 'Design Gig', pay: 9000, energyCost: 18 },
-  { id: 'dev', title: 'Junior Developer', pay: 18000, energyCost: 24 },
-  { id: 'delivery', title: 'Delivery Rider', pay: 6000, energyCost: 14 }
+  { id: 'print', title: 'Print Shop Assistant', pay: 1800, energyCost: 16 },
+  { id: 'design', title: 'Design Gig', pay: 4200, energyCost: 22 },
+  { id: 'dev', title: 'Junior Developer', pay: 7600, energyCost: 28 },
+  { id: 'delivery', title: 'Delivery Rider', pay: 2800, energyCost: 18 }
 ];
 
 function randomId() {
@@ -84,6 +84,8 @@ function createPlayer(name = 'Player', background = 'student', email = '') {
     title: 'New Arrival',
     streak: 0,
     lastActiveDate: null,
+    recoveryStartedAt: null,
+    recoveryAvailableAt: 0,
     health: 100,
     energy: 92,
     mood: 78,
@@ -120,6 +122,8 @@ function ensurePlayer(req, res) {
   player.titles ||= ['New Arrival'];
   player.title ||= 'New Arrival';
   player.streak ||= 0;
+  player.recoveryStartedAt ??= null;
+  player.recoveryAvailableAt ||= 0;
   return player;
 }
 
@@ -193,7 +197,7 @@ function applyActivityEffect(player, activity, activityId) {
     player.energy = Math.min(100, player.energy + 10);
     player.mood = Math.min(100, player.mood + 3);
   } else if (activity.kind === 'meal') {
-    const cost = 800;
+    const cost = activityId === 'buy-produce' ? 3800 : 4500;
     if (player.balance < cost) throw new Error('You need 800 FCFA for this activity.');
     player.balance -= cost;
     player.hunger = Math.min(100, player.hunger + 16);
@@ -203,9 +207,14 @@ function applyActivityEffect(player, activity, activityId) {
     player.energy = Math.max(0, player.energy - 3);
     player.xp += 5;
   } else if (activity.kind === 'work') {
-    if (player.energy < 5) throw new Error('Rest first; you need 5 energy for this task.');
-    player.energy -= 5;
+    if (player.energy < 16) throw new Error('Rest first; you need 16 energy for this shift.');
+    if (player.balance < 1000) throw new Error('You need 1,000 FCFA for data and transport to start this gig.');
+    player.balance -= 1000;
+    player.energy -= 16;
     player.xp += 8;
+    player.balance += 2500;
+    player.ledger.unshift(makeLedgerEntry('credit', 2500, 'Small gig payment'));
+    player.ledger.unshift(makeLedgerEntry('debit', 1000, 'Gig data and transport'));
   } else if (activity.kind === 'fitness') {
     if (player.energy < 4) throw new Error('Rest first; you need 4 energy for this walk.');
     player.energy -= 4;
@@ -216,6 +225,10 @@ function applyActivityEffect(player, activity, activityId) {
   } else if (activity.kind === 'social') {
     player.mood = Math.min(100, player.mood + 4);
   } else if (activity.kind === 'commerce') {
+    const cost = activityId === 'negotiate-stock' ? 2500 : 1500;
+    if (player.balance < cost) throw new Error(`You need ${cost.toLocaleString('en-US')} FCFA to cover the market costs.`);
+    player.balance -= cost;
+    player.ledger.unshift(makeLedgerEntry('debit', cost, 'Market costs'));
     player.mood = Math.min(100, player.mood + 2);
   }
   player.level = 1 + Math.floor(player.xp / 75);
@@ -268,7 +281,7 @@ function route(req, res) {
   if (req.method === 'OPTIONS') return json(res, 204, {});
   const url = new URL(req.url, 'http://localhost');
 
-  if (req.method === 'GET' && url.pathname === '/health') {
+  if (req.method === 'GET' && ['/health', '/api/health'].includes(url.pathname)) {
     return json(res, 200, { ok: true, mode: TEST_MODE ? 'test' : 'live', timestamp: makeTimestamp() });
   }
 
@@ -444,6 +457,7 @@ function route(req, res) {
     return readBody(req)
       .then((body) => {
         const activityId = String(body.activityId || '');
+        if (player.balance <= 0) return json(res, 402, { error: 'Your wallet is empty. Wait for a recovery break before continuing.' });
         const match = Object.entries(storyLocations).flatMap(([locationId, activities]) => activities.map((activity) => ({ ...activity, locationId }))).find((activity) => activity.id === activityId);
         if (!match) return json(res, 400, { error: 'That activity is not available.' });
         if (player.locationId !== match.locationId) return json(res, 400, { error: 'Travel to this location before starting the activity.' });
@@ -493,6 +507,36 @@ function route(req, res) {
       .catch(() => json(res, 400, { error: 'Invalid activity request.' }));
   }
 
+  if (req.method === 'POST' && url.pathname === '/api/player/recovery/start') {
+    const player = ensurePlayer(req, res);
+    if (!player) return null;
+    if (player.balance > 0) return json(res, 400, { error: 'Recovery is available only when your wallet is empty.' });
+    const now = Date.now();
+    if (player.recoveryAvailableAt > now) {
+      return json(res, 429, { error: 'Your next recovery break is not ready yet.', waitMs: player.recoveryAvailableAt - now });
+    }
+    player.recoveryStartedAt = now;
+    return json(res, 200, { waitMs: 20000, readyAt: now + 20000 });
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/player/recovery/claim') {
+    const player = ensurePlayer(req, res);
+    if (!player) return null;
+    const now = Date.now();
+    if (player.balance > 0) return json(res, 400, { error: 'Recovery is available only when your wallet is empty.' });
+    if (!player.recoveryStartedAt) return json(res, 400, { error: 'Start a recovery break first.' });
+    const remaining = 20000 - (now - player.recoveryStartedAt);
+    if (remaining > 0) return json(res, 425, { error: 'The rewarded break is still playing.', waitMs: remaining });
+    player.recoveryStartedAt = null;
+    player.recoveryAvailableAt = now + 20000;
+    player.balance = 2500;
+    player.energy = Math.min(100, player.energy + 30);
+    player.mood = Math.min(100, player.mood + 4);
+    player.ledger.unshift(makeLedgerEntry('credit', 2500, 'Recovery break reward'));
+    player.lastAction = 'You took a recovery break and earned a small restart grant.';
+    return json(res, 200, { player, reward: { cash: 2500, energy: 30 } });
+  }
+
   if (req.method === 'POST' && url.pathname === '/api/player/convert-points') {
     const player = ensurePlayer(req, res);
     if (!player) return null;
@@ -522,10 +566,11 @@ function route(req, res) {
     if (!player) return null;
     return readBody(req)
       .then((body) => {
+        if (player.balance <= 0) return json(res, 402, { error: 'Your wallet is empty. Wait for a recovery break before continuing.' });
         const action = String(body.action || '').toLowerCase();
 
         if (action === 'eat') {
-          const cost = 1500;
+          const cost = 4500;
           if (player.balance < cost) return json(res, 400, { error: 'Not enough FCFA for a meal.' });
           player.balance -= cost;
           player.hunger = Math.min(100, player.hunger + 30);
@@ -539,7 +584,7 @@ function route(req, res) {
         }
 
         if (action === 'rent') {
-          const cost = 35000;
+          const cost = 50000;
           if (player.home) return json(res, 400, { error: 'You already have accommodation.' });
           if (player.balance < cost) return json(res, 400, { error: 'Not enough FCFA to rent a room.' });
           player.balance -= cost;
@@ -579,7 +624,7 @@ function route(req, res) {
         }
 
         if (action === 'ride') {
-          const fare = 2000;
+          const fare = 3500;
           if (player.balance < fare) return json(res, 400, { error: 'Not enough FCFA for the taxi fare.' });
           player.balance -= fare;
           player.position = { x: 42, y: 52 };

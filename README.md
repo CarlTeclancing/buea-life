@@ -24,6 +24,28 @@ No `npm install` is required for this test build because it intentionally has ze
 ## Environment
 Copy `backend/.env.example` to `backend/.env` when evolving beyond test mode. The current dependency-free server reads environment variables supplied by your shell. Test mode does not require secrets.
 
+## Vercel services
+
+Import this repository as one Vercel project with the repository root as its Root Directory. The root `vercel.json` defines three Node services with no build step:
+
+- `backend`: public `/api/*`, including `/api/health`.
+- `frontend`: public `/` and remaining paths.
+- `mobile`: public `/mobile/`, with `/mobile` redirected to the trailing-slash URL so relative assets resolve correctly.
+
+Both browser clients call same-origin `/api/*` in this deployment. Only standalone local clients on localhost ports 5173/5174 use the API on port 4100. The old `buea-api` localStorage override is no longer used.
+
+There are no server-to-server calls, so no service bindings or bound environment variables are needed. Browser JavaScript cannot consume runtime service bindings. If the backend should become internal, add a server-side API proxy and declare the backend binding on its calling service before removing the public API rewrite.
+
+Run from the repository root to test all services through one domain:
+
+```bash
+vercel dev -L
+```
+
+`-L` uses local configuration without linking a Vercel project. Use `vercel dev` for a linked project and its environment variables. Open `/`, `/mobile/`, and `/api/health` on the URL printed by the CLI. Do not set `PORT` globally in Vercel; the runtime manages service ports. Set `TEST_MODE` explicitly if needed (it defaults to `true`); the example `GAME_MODE` variable is not read by the current server.
+
+Deployment limitation: accounts, sessions, and player progress live in process-local Maps. They can disappear on restarts and differ between function instances. Durable shared storage is required before using this as a persistent game; this configuration does not add it.
+
 ## Test gameplay
 1. Enter a character name.
 2. Start at Mile 17 with 75,000 fictional FCFA.
