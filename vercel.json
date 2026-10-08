@@ -2,8 +2,24 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "services": {
     "backend": { "root": "backend", "runtime": "node", "entrypoint": "server.js", "devCommand": "node server.js" },
-    "frontend": { "root": "frontend", "runtime": "node", "entrypoint": "server.js", "devCommand": "node server.js" },
-    "mobile": { "root": "mobile", "runtime": "node", "entrypoint": "server.js", "devCommand": "node server.js" }
+    "frontend": {
+      "root": "frontend",
+      "runtime": "node",
+      "entrypoint": "server.js",
+      "devCommand": "node server.js",
+      "functions": {
+        "server.js": { "includeFiles": "{index.html,src/**}" }
+      }
+    },
+    "mobile": {
+      "root": "mobile",
+      "runtime": "node",
+      "entrypoint": "server.js",
+      "devCommand": "node server.js",
+      "functions": {
+        "server.js": { "includeFiles": "{index.html,manifest.webmanifest,src/**}" }
+      }
+    }
   },
   "redirects": [
     { "source": "/mobile", "destination": "/mobile/", "permanent": true }
